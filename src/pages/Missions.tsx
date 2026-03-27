@@ -12,7 +12,7 @@ import { MissionBadge, PriorityBar, CATEGORY_LABEL } from "../components/Mission
 import { api } from "../api/client";
 import type { Mission, MissionStatus } from "../types";
 
-// ─── Types locaux ────────────────────────────────────────────────────────────
+// ----─ Types locaux ------------------------------------------------------------------------------------------------------------------------
 
 type TabId = "my-missions" | "available";
 
@@ -27,7 +27,7 @@ interface ResolveState {
   error: string | null;
 }
 
-// ─── Constantes ──────────────────────────────────────────────────────────────
+// ----─ Constantes ----------------------------------------------------------------------------------------------------------------------------
 
 const MY_FILTERS: { label: string; value: MissionStatus | "ALL" }[] = [
   { label: "Toutes",    value: "ALL" },
@@ -36,7 +36,7 @@ const MY_FILTERS: { label: string; value: MissionStatus | "ALL" }[] = [
   { label: "Terminées", value: "RESOLVED" },
 ];
 
-// ─── Sous-composant : carte de mission ───────────────────────────────────────
+// ----─ Sous-composant : carte de mission ----------------------------------------------------------------------------─
 
 interface MissionCardProps {
   mission: Mission;
@@ -85,7 +85,7 @@ function MissionCard({
       </div>
 
       <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-        {/* ── Actions selon onglet + statut ── */}
+        {/* ---- Actions selon onglet + statut ---- */}
         {tab === "available" && m.status === "PENDING" && (
           <ActionButton
             icon={<PackageOpen size={12} />}
@@ -127,7 +127,7 @@ function MissionCard({
   );
 }
 
-// ─── Bouton d'action inline ───────────────────────────────────────────────────
+// ----─ Bouton d'action inline ----------------------------------------------------------------------------------------------------─
 
 function ActionButton({
   icon, label, color, busy, onClick,
@@ -154,7 +154,7 @@ function ActionButton({
   );
 }
 
-// ─── Modale Résolution ────────────────────────────────────────────────────────
+// ----─ Modale Résolution ----------------------------------------------------------------------------------------------------------------
 
 function ResolveModal({
   state,
@@ -313,7 +313,7 @@ function ResolveModal({
   );
 }
 
-// ─── Page principale ──────────────────────────────────────────────────────────
+// ----─ Page principale --------------------------------------------------------------------------------------------------------------------
 
 export default function MissionsPage() {
   const navigate = useNavigate();
@@ -329,7 +329,7 @@ export default function MissionsPage() {
   // Modale résolution
   const [resolveState, setResolveState] = useState<ResolveState | null>(null);
 
-  // ── Fetch ──
+  // ---- Fetch ----
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -348,7 +348,7 @@ export default function MissionsPage() {
 
   useEffect(() => { fetchData(); }, []);
 
-  // ── Actions ──
+  // ---- Actions ----
   const handleTake = async (id: number) => {
     setActionLoading(id);
     try {
@@ -440,7 +440,7 @@ export default function MissionsPage() {
     }
   };
 
-  // ── Filtrage ──
+  // ---- Filtrage ----
   const missions = tab === "my-missions" ? myMissions : available;
 
   const filtered = missions.filter((m) => {
@@ -453,20 +453,20 @@ export default function MissionsPage() {
     return matchStatus && matchSearch;
   });
 
-  // ── Compteurs ──
+  // ---- Compteurs ----
   const myCount = myMissions.filter((m) =>
     m.status === "ASSIGNED" || m.status === "IN_PROGRESS"
   ).length;
   const availCount = available.length;
 
-  // ── Render ──
+  // ---- Render ----
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <Header title="Missions" onRefresh={fetchData} loading={loading} />
 
       <div className="flex-1 overflow-y-auto p-7 flex flex-col gap-5">
 
-        {/* ── Onglets ── */}
+        {/* ---- Onglets ---- */}
         <div className="flex gap-2">
           <TabButton
             active={tab === "my-missions"}
@@ -485,7 +485,7 @@ export default function MissionsPage() {
           />
         </div>
 
-        {/* ── Search + filtres (mes missions seulement) ── */}
+        {/* ---- Search + filtres (mes missions seulement) ---- */}
         <div className="flex flex-col gap-3">
           <div className="relative">
             <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -516,7 +516,7 @@ export default function MissionsPage() {
           )}
         </div>
 
-        {/* ── Liste ── */}
+        {/* ---- Liste ---- */}
         {loading ? (
           <LoadingSkeleton />
         ) : filtered.length === 0 ? (
@@ -539,7 +539,7 @@ export default function MissionsPage() {
         )}
       </div>
 
-      {/* ── Modale résolution ── */}
+      {/* ---- Modale résolution ---- */}
       {resolveState && (
         <ResolveModal
           state={resolveState}
@@ -553,7 +553,7 @@ export default function MissionsPage() {
   );
 }
 
-// ─── Helpers UI ───────────────────────────────────────────────────────────────
+// ----─ Helpers UI ----------------------------------------------------------------------------------------------------------------------------─
 
 function TabButton({
   active, icon, label, count, accent, onClick,

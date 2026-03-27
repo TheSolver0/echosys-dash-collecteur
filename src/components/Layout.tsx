@@ -6,7 +6,7 @@ export default function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen bg-[#F4FBF2] overflow-hidden">
+    <div className="flex h-screen bg-[#f0f4f8] overflow-hidden">
       <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       
       <main className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 

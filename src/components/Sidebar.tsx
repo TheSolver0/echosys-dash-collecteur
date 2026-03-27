@@ -12,7 +12,7 @@ const NAV = [
   { to: "/missions",   icon: ClipboardList,   label: "Missions",       badge: true },
   { to: "/carte",      icon: Map,             label: "Carte" },
   { to: "/historique", icon: History,         label: "Historique",     section: "Suivi" },
-  { to: "/messages",   icon: MessageCircle,   label: "Messages" },
+  // { to: "/messages",   icon: MessageCircle,   label: "Messages" },
 ];
 
 

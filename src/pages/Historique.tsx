@@ -8,21 +8,25 @@ import { api } from "../api/client";
 import type { Mission } from "../types";
 
 export default function HistoriquePage() {
+
   const [missions, setMissions] = useState<Mission[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const data = await api.get<Mission[]>("/reports/my-missions");
-      setMissions(data.filter((m) => m.status === "RESOLVED" || m.status === "REJECTED"));
+      const data = await api.get("/reports/my-missions");
+      setMissions(data);
     } catch {
+      // Fallback vide
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => { fetchData(); }, []);
+
+
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
