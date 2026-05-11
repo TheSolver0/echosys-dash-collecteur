@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Leaf, Lock, Phone, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext.tsx";
 
-const BASE_URL = "http://192.168.1.106:3000";
+const BASE_URL = "https://api.echosys.orbitclan.cloud";
 
 export default function Login() {
   const [phone, setPhone] = useState("");

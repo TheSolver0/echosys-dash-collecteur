@@ -8,6 +8,7 @@ import MissionDetailPage from "./pages/MissionDetail";
 import HistoriquePage from "./pages/Historique";
 import MessagesPage from "./pages/Messages";
 import CartePage from "./pages/Carte";
+import ZonesPage from "./pages/Zones";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -33,6 +34,7 @@ function AppRoutes() {
         <Route path="historique" element={<HistoriquePage />} />
         <Route path="messages" element={<MessagesPage />} />
         <Route path="carte" element={<CartePage />} />
+        <Route path="zones" element={<ZonesPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

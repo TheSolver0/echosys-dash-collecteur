@@ -1,18 +1,17 @@
-import { useState,type Dispatch, type SetStateAction } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { type Dispatch, type SetStateAction } from "react";
+import { NavLink } from "react-router-dom";
 import {
-  LayoutDashboard, Map, Users, Truck, UserCog, FileDown, LogOut, Leaf, ChevronLeft, ChevronRight, ClipboardList, History, MessageCircle
+  LayoutDashboard, Map, LogOut, Leaf, ChevronLeft, ChevronRight,
+  ClipboardList, History, Building2,
 } from "lucide-react";
-
-import { useAuth } from "../context/AuthContext";
 
 
 const NAV = [
-  { to: "/",           icon: LayoutDashboard, label: "Dashboard",      section: "Principal" },
-  { to: "/missions",   icon: ClipboardList,   label: "Missions",       badge: true },
-  { to: "/carte",      icon: Map,             label: "Carte" },
-  { to: "/historique", icon: History,         label: "Historique",     section: "Suivi" },
-  // { to: "/messages",   icon: MessageCircle,   label: "Messages" },
+  { to: "/",           icon: LayoutDashboard, label: "Dashboard"  },
+  { to: "/missions",   icon: ClipboardList,   label: "Missions",  badge: true },
+  { to: "/carte",      icon: Map,             label: "Carte"      },
+  { to: "/zones",      icon: Building2,       label: "Zones"      },
+  { to: "/historique", icon: History,         label: "Historique" },
 ];
 
 

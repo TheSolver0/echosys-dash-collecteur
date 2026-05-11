@@ -3,15 +3,15 @@ import {
   AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
-import { ClipboardList, CheckCircle2, AlertTriangle, Route, MapPin, MessageCircle } from "lucide-react";
+import { ClipboardList, CheckCircle2, AlertTriangle, Weight, MapPin, Building2, ChevronRight } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { fr } from "date-fns/locale";
 import Header from "../components/Header";
 import StatCard from "../components/StatCard";
 import { MissionBadge, PriorityBar, CATEGORY_LABEL } from "../components/MissionBadge";
-import { api } from "../api/client";
+import { api, zonesApi } from "../api/client";
 import { useAuth } from "../context/AuthContext";
-import type { Mission } from "../types";
+import type { Mission, DistrictStats } from "../types";
 
 const STATUS_PIE_COLOR: Record<string, string> = {
   PENDING:     "#f59e0b",
@@ -21,16 +21,37 @@ const STATUS_PIE_COLOR: Record<string, string> = {
   REJECTED:    "#ef4444",
 };
 
+const STATUS_LABEL_FR: Record<string, string> = {
+  PENDING: "En attente", ASSIGNED: "Assignée", IN_PROGRESS: "En cours",
+  RESOLVED: "Terminée",  REJECTED: "Rejetée",
+};
+
+const fmtTonnage = (kg: number) =>
+  kg >= 1000 ? `${(kg / 1000).toFixed(1)} t` : `${kg} kg`;
+
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [missions, setMissions] = useState<Mission[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [missions, setMissions]           = useState<Mission[]>([]);
+  const [districtStats, setDistrictStats] = useState<DistrictStats | null>(null);
+  const [loading, setLoading]             = useState(true);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const data = await api.get("/reports/my-missions");
-      setMissions(data);
+      const [missionsData] = await Promise.all([
+        api.get("/reports/my-missions"),
+      ]);
+      setMissions(missionsData);
+
+      // Charger les stats du district assigné si disponible
+      if (user?.districtId) {
+        try {
+          const stats = await zonesApi.districtStats(user.districtId);
+          setDistrictStats(stats);
+        } catch {
+          // stats optionnelles
+        }
+      }
     } catch {
       // Fallback vide
     } finally {
@@ -40,43 +61,41 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchData(); }, []);
 
-  // -------- Calculs --------
-  const today = format(new Date(), "yyyy-MM-dd");
-  const todayMissions = missions.filter((m) => m.createdAt.startsWith(today));
-  const inProgress  = missions.filter((m) => m.status === "IN_PROGRESS").length;
-  const pending     = missions.filter((m) => m.status === "PENDING" || m.status === "ASSIGNED").length;
-  const resolved    = missions.filter((m) => m.status === "RESOLVED").length;
-  const highPrio    = missions.filter((m) => m.priority === "HIGH" && m.status !== "RESOLVED").length;
+  // ── Calculs ─────────────────────────────────────────────────────────────────
+  const today          = format(new Date(), "yyyy-MM-dd");
+  const todayMissions  = missions.filter(m => m.createdAt.startsWith(today));
+  const inProgress     = missions.filter(m => m.status === "IN_PROGRESS").length;
+  const pending        = missions.filter(m => m.status === "PENDING" || m.status === "ASSIGNED").length;
+  const resolved       = missions.filter(m => m.status === "RESOLVED").length;
+  const highPrio       = missions.filter(m => m.priority === "HIGH" && m.status !== "RESOLVED").length;
 
-  // Tendance 7 jours
   const trendData = Array.from({ length: 7 }, (_, i) => {
     const date = subDays(new Date(), 6 - i);
-    const ds = format(date, "yyyy-MM-dd");
-    const day = missions.filter((m) => m.createdAt.startsWith(ds));
+    const ds   = format(date, "yyyy-MM-dd");
+    const day  = missions.filter(m => m.createdAt.startsWith(ds));
     return {
-      date: format(date, "EEE", { locale: fr }),
-      assignées: day.length,
-      complétées: day.filter((m) => m.status === "RESOLVED").length,
+      date:       format(date, "EEE", { locale: fr }),
+      assignées:  day.length,
+      complétées: day.filter(m => m.status === "RESOLVED").length,
     };
   });
 
-  // Statuts pour Pie
   const pieData = Object.entries(STATUS_PIE_COLOR)
     .map(([key, color]) => ({
       name: key, color,
-      value: missions.filter((m) => m.status === key).length,
+      value: missions.filter(m => m.status === key).length,
     }))
-    .filter((d) => d.value > 0);
+    .filter(d => d.value > 0);
 
-  // Missions actives (5 dernières non résolues)
   const activeMissions = missions
-    .filter((m) => m.status !== "RESOLVED" && m.status !== "REJECTED")
+    .filter(m => m.status !== "RESOLVED" && m.status !== "REJECTED")
     .slice(0, 5);
 
-  const STATUS_LABEL_FR: Record<string, string> = {
-    PENDING: "En attente", ASSIGNED: "Assignée", IN_PROGRESS: "En cours",
-    RESOLVED: "Terminée", REJECTED: "Rejetée",
-  };
+  // Tonnage du district ou fallback via missions résolues (1 mission ≈ 50 kg estimé)
+  const zoneTonnage = districtStats?.tonnage
+    ?? resolved * 50;
+
+  const hasZoneInfo = user?.district || user?.commune || user?.districtId;
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -89,17 +108,42 @@ export default function DashboardPage() {
 
       <div className="flex-1 overflow-y-auto p-7 flex flex-col gap-5">
 
-        {/* -------- KPIs -------- */}
+        {/* ── Bannière zone assignée ── */}
+        {hasZoneInfo && (
+          <a href="/zones"
+            className="flex items-center gap-3 bg-gradient-to-r from-[#1E2D24] to-[#2D6A4F] rounded-2xl px-5 py-3.5 text-white hover:opacity-95 transition group">
+            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
+              <Building2 size={18} className="text-[#74C69D]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-white/60 leading-none mb-0.5">Zone assignée</p>
+              <p className="text-sm font-black truncate">
+                {user?.district?.name ?? `District #${user?.districtId}`}
+                {user?.commune ? ` · ${user.commune.name}` : ""}
+              </p>
+            </div>
+            {districtStats && (
+              <div className="text-right flex-shrink-0">
+                <p className="text-[10px] text-white/50 leading-none mb-0.5">Taux collecte</p>
+                <p className="text-base font-black text-[#74C69D]">{districtStats.collectionRate}%</p>
+              </div>
+            )}
+            <ChevronRight size={16} className="text-white/40 group-hover:text-white/80 transition flex-shrink-0" />
+          </a>
+        )}
+
+        {/* ── KPIs ── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard icon={ClipboardList} label="Missions du jour"    value={todayMissions.length} color="amber"  sub={`${pending} en attente · ${inProgress} en cours`} />
-          <StatCard icon={CheckCircle2}  label="Complétées ce mois"  value={resolved}             color="green"  trend={12} sub="vs mois dernier" />
-          <StatCard icon={AlertTriangle} label="Priorité haute"      value={highPrio}             color="red" />
-          <StatCard icon={Route}         label="Km parcourus"        value="—"                    color="blue"   sub="Aujourd'hui" />
+          <StatCard icon={ClipboardList} label="Missions du jour"   value={todayMissions.length} color="amber"  sub={`${pending} en attente · ${inProgress} en cours`} />
+          <StatCard icon={CheckCircle2}  label="Complétées ce mois" value={resolved}             color="green"  trend={12} sub="vs mois dernier" />
+          <StatCard icon={AlertTriangle} label="Priorité haute"     value={highPrio}             color="red" />
+          <StatCard icon={Weight}        label="Tonnage collecté"   value={fmtTonnage(zoneTonnage)} color="blue" sub={districtStats ? "Zone assignée" : "Estimé"} />
         </div>
 
-        {/* -------- CHARTS -------- */}
+        {/* ── Charts ── */}
         <div className="grid grid-cols-3 gap-4">
-          {/* Tendance */}
+
+          {/* Tendance 7j */}
           <div className="col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
             <h3 className="font-black text-[#1E2D24] text-sm mb-0.5">Activité des 7 derniers jours</h3>
             <p className="text-xs text-gray-400 mb-4">Missions assignées vs complétées</p>
@@ -110,11 +154,11 @@ export default function DashboardPage() {
                 <AreaChart data={trendData}>
                   <defs>
                     <linearGradient id="gA" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.12} />
+                      <stop offset="5%"  stopColor="#3b82f6" stopOpacity={0.12} />
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                     <linearGradient id="gC" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#40916C" stopOpacity={0.12} />
+                      <stop offset="5%"  stopColor="#40916C" stopOpacity={0.12} />
                       <stop offset="95%" stopColor="#40916C" stopOpacity={0} />
                     </linearGradient>
                   </defs>
@@ -148,7 +192,7 @@ export default function DashboardPage() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="flex flex-col gap-1.5 mt-2">
-                  {pieData.map((d) => (
+                  {pieData.map(d => (
                     <div key={d.name} className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: d.color }} />
@@ -163,7 +207,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* -------- MISSIONS ACTIVES -------- */}
+        {/* ── Missions actives ── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -179,17 +223,20 @@ export default function DashboardPage() {
             <div className="text-xs text-gray-400 py-4 text-center">Aucune mission active</div>
           ) : (
             <div className="flex flex-col divide-y divide-gray-50">
-              {activeMissions.map((m) => (
+              {activeMissions.map(m => (
                 <div key={m.id} className="flex items-center gap-3 py-2.5">
                   <PriorityBar priority={m.priority} />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold truncate">
                       {CATEGORY_LABEL[m.category] ?? m.category}
-                      {m.location ? ` — ${m.location}` : ""}
+                      {m.district?.name ? ` — ${m.district.name}` : m.location ? ` — ${m.location}` : ""}
                     </p>
                     <div className="flex items-center gap-1 text-[11px] text-gray-400 mt-0.5">
                       <MapPin size={10} />
-                      <span>{m.location ?? "Position inconnue"}</span>
+                      <span>
+                        {m.district?.name ?? m.location ?? "Position inconnue"}
+                        {m.district?.commune ? `, ${m.district.commune.name}` : ""}
+                      </span>
                     </div>
                   </div>
                   <MissionBadge status={m.status} />
