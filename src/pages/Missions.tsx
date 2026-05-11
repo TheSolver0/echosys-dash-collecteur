@@ -334,8 +334,8 @@ export default function MissionsPage() {
     setLoading(true);
     try {
       const [mine, avail] = await Promise.all([
-        api.get("/reports/my-missions"),
-        api.get("/reports/available"),
+        api.get<Mission[]>("/reports/my-missions"),
+        api.get<Mission[]>("/reports/available"),
       ]);
       setMyMissions(mine);
       setAvailable(avail);

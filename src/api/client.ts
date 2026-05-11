@@ -24,9 +24,9 @@ export const api = {
 // ─── Zones & hiérarchie géographique ─────────────────────────────────────────
 
 export const zonesApi = {
-  listCUs:       ()           => api.get("/zones/cu"),
-  listCommunes:  ()           => api.get("/zones/communes"),
-  districtStats: (id: number) => api.get(`/zones/stats/quartier/${id}`),
-  communeStats:  (id: number) => api.get(`/zones/stats/commune/${id}`),
-  cuStats:       (id: number) => api.get(`/zones/stats/cu/${id}`),
+  listCUs:       <T = unknown>()           => api.get<T>("/zones/cu"),
+  listCommunes:  <T = unknown>()           => api.get<T>("/zones/communes"),
+  districtStats: <T = unknown>(id: number) => api.get<T>(`/zones/stats/quartier/${id}`),
+  communeStats:  <T = unknown>(id: number) => api.get<T>(`/zones/stats/commune/${id}`),
+  cuStats:       <T = unknown>(id: number) => api.get<T>(`/zones/stats/cu/${id}`),
 };

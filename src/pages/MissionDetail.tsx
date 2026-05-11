@@ -23,7 +23,7 @@ export default function MissionDetailPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    api.get(`/reports/${id}`)
+    api.get<Mission>(`/reports/${id}`)
       .then(setMission)
       .catch(() => navigate("/missions"))
       .finally(() => setLoading(false));

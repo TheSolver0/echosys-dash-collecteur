@@ -173,7 +173,7 @@ export default function ZonesPage() {
     setLoading(true);
     try {
       // Récupérer toutes les communes pour construire les stats
-      const communesRaw: Commune[] = await zonesApi.listCommunes();
+      const communesRaw = await zonesApi.listCommunes<Commune[]>();
 
       // Pour chaque commune, charger ses stats
       const statsPromises = communesRaw.map(c => zonesApi.communeStats(c.id).catch(() => null));
@@ -185,7 +185,7 @@ export default function ZonesPage() {
       // Stats de ma zone assignée
       if (user?.districtId) {
         try {
-          const ds = await zonesApi.districtStats(user.districtId);
+          const ds = await zonesApi.districtStats<DistrictStats>(user.districtId);
           setMyStats(ds);
         } catch {
           // optionnel

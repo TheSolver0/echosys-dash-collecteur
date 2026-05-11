@@ -39,14 +39,14 @@ export default function DashboardPage() {
     setLoading(true);
     try {
       const [missionsData] = await Promise.all([
-        api.get("/reports/my-missions"),
+        api.get<Mission[]>("/reports/my-missions"),
       ]);
       setMissions(missionsData);
 
       // Charger les stats du district assigné si disponible
       if (user?.districtId) {
         try {
-          const stats = await zonesApi.districtStats(user.districtId);
+          const stats = await zonesApi.districtStats<DistrictStats>(user.districtId);
           setDistrictStats(stats);
         } catch {
           // stats optionnelles

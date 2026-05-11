@@ -34,7 +34,7 @@ export default function HistoriquePage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const data = await api.get("/reports/my-missions");
+      const data = await api.get<Mission[]>("/reports/my-missions");
       setMissions(data);
     } catch {
       // Fallback vide

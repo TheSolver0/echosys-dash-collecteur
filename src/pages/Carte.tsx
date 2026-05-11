@@ -88,7 +88,7 @@ export default function MapPage() {
     try {
       const [communesData, missionsData] = await Promise.all([
         zonesApi.listCommunes(),
-        api.get("/reports/my-missions"),
+        api.get<Mission[]>("/reports/my-missions"),
       ]);
 
       // Aplatir les districts depuis toutes les communes
@@ -114,7 +114,7 @@ export default function MapPage() {
     setDistrictStats(null);
     setStatsLoading(true);
     try {
-      const stats = await zonesApi.districtStats(d.id);
+      const stats = await zonesApi.districtStats<DistrictStats>(d.id);
       setDistrictStats(stats);
     } catch {
       // stats indisponibles
