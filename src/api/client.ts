@@ -2,7 +2,7 @@ const BASE_URL = (import.meta as any).env?.VITE_API_URL ?? "https://api.echosys.
 
 const getToken = () => localStorage.getItem("accessToken");
 
-async function request(method: string, path: string, body?: unknown) {
+async function request<T = unknown>(method: string, path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers: {
@@ -12,13 +12,13 @@ async function request(method: string, path: string, body?: unknown) {
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) throw new Error(`Erreur ${res.status}`);
-  return res.json();
+  return res.json() as Promise<T>;
 }
 
 export const api = {
-  get:   (path: string)            => request("GET",   path),
-  patch: (path: string, body: unknown) => request("PATCH", path, body),
-  post:  (path: string, body: unknown) => request("POST",  path, body),
+  get:   <T = unknown>(path: string)                    => request<T>("GET",   path),
+  patch: <T = unknown>(path: string, body: unknown)     => request<T>("PATCH", path, body),
+  post:  <T = unknown>(path: string, body: unknown)     => request<T>("POST",  path, body),
 };
 
 // ─── Zones & hiérarchie géographique ─────────────────────────────────────────
